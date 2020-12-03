@@ -36,7 +36,7 @@ def restricted(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in settings_data['users'] + settings_data['admins']:
+        if user_id not in settings_data['user'] + settings_data['admin']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
@@ -48,7 +48,7 @@ def restricted_admin(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in settings_data['admins']:
+        if user_id not in settings_data['admin']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
@@ -173,12 +173,12 @@ def start(update, context):
 def secret(update, context):
     if update.effective_user.id in settings_data['blacklist']:
         return None
-    if not settings_data['users']:
-        if update.effective_user.id not in settings_data['admins']:
-            settings_data['admins'].append(update.effective_user.id)
+    if not settings_data['user']:
+        if update.effective_user.id not in settings_data['admin']:
+            settings_data['admin'].append(update.effective_user.id)
     else:
-        if update.effective_user.id not in settings_data['users']:
-            settings_data['users'].append(update.effective_user.id)
+        if update.effective_user.id not in settings_data['user']:
+            settings_data['user'].append(update.effective_user.id)
     config.settings.write_text(json.dumps(settings_data))
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"User {update.effective_user.id} added")
 
