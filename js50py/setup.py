@@ -39,8 +39,6 @@ if not pyrogram_config.is_file():
 sc = StickerCollector(config_file=pyrogram_config)
 base_sticker = sc.get_set_emojis_dict(None)
 print(f"Cached {len(base_sticker)} Telegram animations")
-owl_sticker = sc.get_set_emojis_dict('polar_owl')
-print(f"Cached {len(owl_sticker)} Owl animations")
 sc.client.stop()
 del sc
 
