@@ -11,7 +11,7 @@ import qrcode
 import skvideo.io
 from PIL import Image, ImageOps
 
-from js50py import config
+import config
 
 tz = pytz.timezone(config.time_zone)
 tgs_tool = str((config.base_dir / 'tools' / 'tgs' / 'cli.js').absolute())

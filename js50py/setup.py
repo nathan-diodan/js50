@@ -1,5 +1,5 @@
-from js50py import config
-from js50py.animation_helper.sticker_pack_cache import StickerCollector
+import config
+from animation_helper.sticker_pack_cache import StickerCollector
 import subprocess
 import json
 
@@ -39,6 +39,5 @@ if not pyrogram_config.is_file():
 sc = StickerCollector(config_file=pyrogram_config)
 base_sticker = sc.get_set_emojis_dict(None)
 print(f"Cached {len(base_sticker)} Telegram animations")
-sc.client.stop()
-del sc
+
 

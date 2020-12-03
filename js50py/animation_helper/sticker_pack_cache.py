@@ -8,8 +8,8 @@ from pyrogram.raw.types import InputStickerSetAnimatedEmoji
 from pyrogram.raw.types import InputStickerSetShortName
 from pyrogram.utils import encode_file_ref
 
-from js50py import config
-from js50py.animation_helper.animation_functions import cache_animation
+import config
+from animation_helper.animation_functions import cache_animation
 
 class FileData:
     def __init__(

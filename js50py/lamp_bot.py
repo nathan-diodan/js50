@@ -13,8 +13,8 @@ from telegram.ext import BaseFilter
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler
 from telegram.ext import Updater, Filters
 
-from js50py import config
-from js50py.animation_helper.animation_functions import prepare_animation, prepare_video, load_photo
+import config
+from animation_helper.animation_functions import prepare_animation, prepare_video, load_photo
 
 zmq_context = zmq.Context()
 

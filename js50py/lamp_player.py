@@ -15,9 +15,9 @@ from pyhap import const
 from pyhap.accessory import Accessory
 from pyhap.accessory_driver import AccessoryDriver
 
-from js50py.animation_helper.animation_functions import load_video, load_animation, load_text, load_qr, get_time_quad
-from js50py.animation_helper.render_earth import render_earth, render_single_frame
-from js50py.post_master import LEDPost
+from animation_helper.animation_functions import load_video, load_animation, load_text, load_qr, get_time_quad
+from animation_helper.render_earth import render_earth, render_single_frame
+from post_master import LEDPost
 
 
 class LPlayer:
