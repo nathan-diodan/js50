@@ -1,7 +1,6 @@
 import logging
 from functools import wraps
 from io import BytesIO
-from pathlib import Path
 import subprocess
 import json
 
@@ -352,7 +351,7 @@ def cb_emoji(update, context):
     reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
                                              text=f"An emoji! (U+{emoji_code})")
     animated_emoji_file = config.telegram_sticker_folder / f'emoji_u{emoji_code}.npz'
-    emoji_file = Path('fonts/emoji/') / f'emoji_u{emoji_code}.png'
+    emoji_file = config.emoji_folder / f'emoji_u{emoji_code}.png'
     if animated_emoji_file.is_file():
         send_cache_file(socket, animated_emoji_file, file_type='sticker')
         reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now animated on display.")

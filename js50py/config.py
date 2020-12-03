@@ -10,8 +10,9 @@ url = 'https://github.com/nathan-diodan/js50'
 base_dir = Path(__file__).absolute().parent.parent
 fonts_folder = base_dir / 'fonts'
 cache_folder = base_dir / 'cache'
-telegram_sticker_folder = cache_folder / 'telegram' / 'animated_sticker'
-telegram_video_folder = cache_folder / 'telegram' / 'video'
+emoji_folder = cache_folder / 'emoji'
+telegram_sticker_folder = cache_folder / 'animated_sticker'
+telegram_video_folder = cache_folder / 'video'
 tgs_tool_folder = base_dir / 'tools' / 'tgs'
 settings = base_dir / 'config.json'
 

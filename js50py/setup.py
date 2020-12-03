@@ -6,7 +6,8 @@ import json
 print('JS50 lamp setup')
 print('create needed folder')
 
-for folder in [config.fonts_folder, config.telegram_sticker_folder, config.telegram_video_folder]:
+for folder in [config.fonts_folder, config.telegram_sticker_folder,
+               config.telegram_video_folder, config.emoji_folder]:
     folder.mkdir(exist_ok=True, parents=True)
 
 print('Setup Telegram Bot')

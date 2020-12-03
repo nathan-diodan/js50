@@ -6,7 +6,7 @@ Pyrogram
 numpy
 sounddevice
 matplotlib
-HAP-python
+HAP-python[QRCode]
 emoji
 freetype-py
 pytz
