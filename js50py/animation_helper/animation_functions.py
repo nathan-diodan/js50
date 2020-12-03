@@ -163,13 +163,13 @@ def text2numpy(text, mono=False, include_emoji=True, face_size=20, rgb=(1, 1, 1)
     if include_emoji:
         face_size = 109
     if include_emoji:
-        emoji_face = freetype.Face("fonts/NotoColorEmoji.ttf")
+        emoji_face = freetype.Face(str((config.fonts_folder / "NotoColorEmoji.ttf").absolute()))
         emoji_face.set_char_size(face_size * 64)
 
     if mono:
-        base_face = freetype.Face('fonts/CourierPrime-Regular.ttf')
+        base_face = freetype.Face(str((config.fonts_folder / 'CourierPrime-Regular.ttf').absolute()))
     else:
-        base_face = freetype.Face('fonts/OpenSans-SemiBold.ttf')
+        base_face = freetype.Face(str((config.fonts_folder / 'OpenSans-SemiBold.ttf').absolute()))
 
     base_face.set_char_size(face_size * 64)
     is_emoji = np.zeros(len(text), dtype=np.bool)

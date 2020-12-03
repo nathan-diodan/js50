@@ -324,8 +324,6 @@ def sticker(update, context):
         send_animation_data(socket, load_photo(raw_sticker_data, box=True))
 
     reply_massage.edit_text(text=f"*{update.message.sticker.set_name.replace('_', ' ').upper()}* {update.message.sticker.emoji} sticker️ is now on display.", parse_mode=ParseMode.MARKDOWN)
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=f"{str(sticker_cache_file.absolute())}")
 
 
 @restricted
