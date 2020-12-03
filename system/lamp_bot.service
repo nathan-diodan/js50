@@ -1,0 +1,16 @@
+[Unit]
+Description=LED Matix Bot
+
+After=syslog.target network.target lamp_pusher.service
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/bin/auto_lamp_bot.sh
+Restart=on-failure
+RestartSec=15
+KillMode=mixed
+User=pi
+Group=pi
+
+[Install]
+WantedBy=multi-user.target

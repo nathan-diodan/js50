@@ -1,0 +1,1 @@
+sudo lamp_pusher --led-slowdown-gpio=4 --led-brightness=100 --led-pixel-mapper="U-mapper;Rotate:180"

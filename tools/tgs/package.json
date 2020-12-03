@@ -1,0 +1,23 @@
+{
+  "name": "tgs-conv",
+  "version": "0.0.1",
+  "description": "Converts animated stickers for Telegram",
+  "main": "index.js",
+  "scripts": {
+    "start": "node cli.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathan-diodan/js50.git"
+  },
+  "author": "Hagen Eckert",
+  "license": "MIT",
+  "homepage": "https://github.com/nathan-diodan/js50#README.md",
+  "dependencies": {
+    "puppeteer-lottie": "git+https://git@github.com/ed-asriyan/puppeteer-lottie.git"
+  },
+  "devDependencies": {
+    "argparse": "^1.0.10"
+  }
+}

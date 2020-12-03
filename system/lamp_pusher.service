@@ -1,0 +1,16 @@
+[Unit]
+Description=LED Matix Pusher
+
+After=syslog.taget network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/sbin/auto_lamp_pusher.sh
+Restart=on-failure
+RestartSec=15
+KillMode=mixed
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

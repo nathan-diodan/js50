@@ -1,0 +1,15 @@
+emoji
+pyzmq
+qrcode
+python-telegram-bot
+Pyrogram
+numpy
+sounddevice
+matplotlib
+HAP-python
+emoji
+freetype-py
+pytz
+scikit-video
+Pillow
+Cartopy
