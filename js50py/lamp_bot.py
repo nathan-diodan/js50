@@ -16,9 +16,6 @@ from telegram.ext import Updater, Filters
 from js50py import config
 from js50py.animation_helper.animation_functions import prepare_animation, prepare_video, load_photo
 
-LIST_OF_ADMINS = [176786459, ]
-LIST_OF_USERS = [443562275, ]
-
 zmq_context = zmq.Context()
 
 
@@ -32,13 +29,14 @@ print("Connecting to tcp://127.0.0.1:2222")
 socket = zmq_context.socket(zmq.REQ)
 socket.connect("tcp://127.0.0.1:2222")
 print('Connected')
+settings_data = json.loads(config.settings.read_text())
 
 
 def restricted(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in LIST_OF_USERS + LIST_OF_ADMINS:
+        if user_id not in settings_data['users'] + settings_data['admins']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
@@ -50,21 +48,15 @@ def restricted_admin(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in LIST_OF_ADMINS:
+        if user_id not in settings_data['admins']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
 
     return wrapped
 
-settings_data = json.loads(config.settings.read_text())
-updater = Updater(token='1122525382:AAHmSRawCeKD328xp17Je_uZIjJEmx1WVyU', use_context=True)
-cache_animations = Path('cache/telegram/animated_sticker')
-cache_video = Path('cache/telegram/video')
 
-cache_video.mkdir(parents=True, exist_ok=True)
-cache_animations.mkdir(parents=True, exist_ok=True)
-
+updater = Updater(token=settings_data.token, use_context=True)
 
 dispatcher = updater.dispatcher
 
@@ -300,8 +292,8 @@ def callback(update, context):
 
 @restricted
 def video(update, context):
-    video_cache_file_raw = cache_video / f'new_raw.mp4'
-    video_cache_file = cache_video / f'new.mp4'
+    video_cache_file_raw = config.telegram_video_folder / f'new_raw.mp4'
+    video_cache_file = config.telegram_video_folder / f'new.mp4'
     reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
                                              text=f"A video! Start Downloading ({update.message.effective_attachment.file_size/1024:.1f} kB)...")
     raw_video_file = context.bot.get_file(update.message.effective_attachment.file_id)
@@ -314,7 +306,7 @@ def video(update, context):
 @restricted
 def sticker(update, context):
 
-    sticker_cache_file = cache_animations / f'{update.message.sticker.file_unique_id}.npz'
+    sticker_cache_file = config.telegram_sticker_folder / f'{update.message.sticker.file_unique_id}.npz'
 
     if update.message.sticker.is_animated:
         reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
@@ -360,7 +352,7 @@ def cb_emoji(update, context):
     emoji_code = "_".join([f'{ord(c):x}' for c in emoji_value]).replace('_fe0f', '')
     reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
                                              text=f"An emoji! (U+{emoji_code})")
-    animated_emoji_file = cache_animations / f'emoji_u{emoji_code}.npz'
+    animated_emoji_file = config.telegram_sticker_folder / f'emoji_u{emoji_code}.npz'
     emoji_file = Path('fonts/emoji/') / f'emoji_u{emoji_code}.png'
     if animated_emoji_file.is_file():
         send_cache_file(socket, animated_emoji_file, file_type='sticker')
