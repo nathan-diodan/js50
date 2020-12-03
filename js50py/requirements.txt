@@ -12,3 +12,4 @@ freetype-py
 pytz
 scikit-video
 Pillow
+moderngl

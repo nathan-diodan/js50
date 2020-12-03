@@ -18,7 +18,7 @@ from pyhap.accessory_driver import AccessoryDriver
 from animation_helper.animation_functions import load_video, load_animation, load_text, load_qr, get_time_quad
 from animation_helper.render_earth import render_earth, render_single_frame
 from post_master import LEDPost
-
+import config
 
 class LPlayer:
     def __init__(self):
@@ -31,9 +31,14 @@ class LPlayer:
 
         self.mode = 'telegram'
 
-        self.current_animation = load_animation(Path('/home/pi/dev/lamp/cache/telegram/animated_sticker/AgADMQADwZxgDA.npz'))
-        self.current_player = Player(self.LEDmatrix, self.current_animation)
-        self.current_player.start()
+        startup_annimation = config.telegram_sticker_folder / 'AgADMQADwZxgDA.npz'
+        if startup_annimation.is_file():
+            self.current_animation = load_animation(startup_annimation)
+            self.current_player = Player(self.LEDmatrix, self.current_animation)
+            self.current_player.start()
+        else:
+            self.current_animation = None
+            self.current_player = None
 
     def recv_work(self, copy=True, track=False):
         meta_data = self.control_socket.recv_json()
