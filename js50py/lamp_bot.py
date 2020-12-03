@@ -368,7 +368,7 @@ def catch_all(update, context):
 emoji_filter = FilterEmoji()
 handler_list = [
     CommandHandler('start', start),
-    CommandHandler(settings_data['secret'], secret),
+    CommandHandler(config.settings['secret'], secret),
     CommandHandler('animation', animation),
     CommandHandler('clock', clock),
     CommandHandler('apple', apple_lamp),
