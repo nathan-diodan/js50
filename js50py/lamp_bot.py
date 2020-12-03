@@ -56,7 +56,7 @@ def restricted_admin(func):
     return wrapped
 
 
-updater = Updater(token=settings_data.token, use_context=True)
+updater = Updater(token=settings_data['token'], use_context=True)
 
 dispatcher = updater.dispatcher
 
