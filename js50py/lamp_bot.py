@@ -360,7 +360,8 @@ def cb_emoji(update, context):
         send_animation_data(socket, photo_data, fps=5)
         reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now on display.")
     else:
-        reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is not in my database.")
+        send_text(socket, emoji_value)
+        reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now rendered and on display.")
 
 
 @restricted

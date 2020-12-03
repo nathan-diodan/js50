@@ -234,6 +234,13 @@ def text2numpy(text, mono=False, include_emoji=True, face_size=20, rgb=(1, 1, 1)
 
 def load_text(text, rgb=(1, 1, 1), scale=5, display_shape=(64, 64), skip=10):
     Z = text2numpy(text, rgb=rgb)
+    if text in emoji.UNICODE_EMOJI:
+        pil_image = Image.fromarray(Z)
+        pil_image.thumbnail(display_shape)  # , Image.ANTIALIAS)
+        pil_image = make_square(pil_image, size=display_shape[0], fill_color=(0, 0, 0, 0))
+        frame = np.array(pil_image.convert('RGB'), dtype=np.uint8)
+        return {'mover': True, 'frame': frame, 'fps': 5}
+
     final_height = int(round(Z.shape[0] / scale))
     final_width = int(round(Z.shape[1] * (final_height / Z.shape[0])))
     pil_image = Image.fromarray(Z)

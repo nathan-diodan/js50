@@ -20,6 +20,7 @@ from animation_helper.render_earth import render_earth, render_single_frame
 from post_master import LEDPost
 import config
 
+
 class LPlayer:
     def __init__(self):
 
