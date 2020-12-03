@@ -7,7 +7,7 @@ print('JS50 lamp setup')
 print('create needed folder')
 
 for folder in [config.fonts_folder, config.telegram_sticker_folder,
-               config.telegram_video_folder, config.emoji_folder]:
+               config.telegram_video_folder]:
     folder.mkdir(exist_ok=True, parents=True)
 
 print('Setup Telegram Bot')
@@ -20,7 +20,9 @@ if not config.settings.is_file():
         secret=secret,
         user=[],
         admin=[],
-        blacklist=[]
+        blacklist=[],
+        emoji={'font': "NotoColorEmoji.ttf", 'size': 109},
+        #emoji={'font': "Apple Color Emoji.ttc", 'size': 160},
     )
     config.settings.write_text(json.dumps(settings_data, indent=4))
 

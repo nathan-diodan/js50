@@ -28,14 +28,13 @@ print("Connecting to tcp://127.0.0.1:2222")
 socket = zmq_context.socket(zmq.REQ)
 socket.connect("tcp://127.0.0.1:2222")
 print('Connected')
-settings_data = json.loads(config.settings.read_text())
 
 
 def restricted(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in settings_data['user'] + settings_data['admin']:
+        if user_id not in config.settings['user'] + config.settings['admin']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
@@ -47,7 +46,7 @@ def restricted_admin(func):
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id not in settings_data['admin']:
+        if user_id not in config.settings['admin']:
             print("Unauthorized access denied for {}.".format(user_id))
             return
         return func(update, context, *args, **kwargs)
@@ -55,7 +54,7 @@ def restricted_admin(func):
     return wrapped
 
 
-updater = Updater(token=settings_data['token'], use_context=True)
+updater = Updater(token=config.settings['token'], use_context=True)
 
 dispatcher = updater.dispatcher
 
@@ -170,15 +169,15 @@ def start(update, context):
 
 
 def secret(update, context):
-    if update.effective_user.id in settings_data['blacklist']:
+    if update.effective_user.id in config.settings['blacklist']:
         return None
-    if not settings_data['user']:
-        if update.effective_user.id not in settings_data['admin']:
-            settings_data['admin'].append(update.effective_user.id)
+    if not config.settings['user']:
+        if update.effective_user.id not in config.settings['admin']:
+            config.settings['admin'].append(update.effective_user.id)
     else:
-        if update.effective_user.id not in settings_data['user']:
-            settings_data['user'].append(update.effective_user.id)
-    config.settings.write_text(json.dumps(settings_data))
+        if update.effective_user.id not in config.settings['user']:
+            config.settings['user'].append(update.effective_user.id)
+    config.settings_file.write_text(json.dumps(config.settings))
     context.bot.send_message(chat_id=update.effective_chat.id, text=f"User {update.effective_user.id} added")
 
 
@@ -351,17 +350,12 @@ def cb_emoji(update, context):
     reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
                                              text=f"An emoji! (U+{emoji_code})")
     animated_emoji_file = config.telegram_sticker_folder / f'emoji_u{emoji_code}.npz'
-    emoji_file = config.emoji_folder / f'emoji_u{emoji_code}.png'
     if animated_emoji_file.is_file():
         send_cache_file(socket, animated_emoji_file, file_type='sticker')
         reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now animated on display.")
-    elif emoji_file.is_file():
-        photo_data = load_photo(emoji_file, box=True)
-        send_animation_data(socket, photo_data, fps=5)
-        reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now on display.")
     else:
         send_text(socket, emoji_value)
-        reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now rendered and on display.")
+        reply_massage.edit_text(text=f"{emoji_value} (U+{emoji_code}) is now on display.")
 
 
 @restricted

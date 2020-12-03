@@ -161,9 +161,9 @@ def get_time(display_seconds=True, rgb=(1, 1, 1), display_shape=(64, 64)):
 
 def text2numpy(text, mono=False, include_emoji=True, face_size=20, rgb=(1, 1, 1)):
     if include_emoji:
-        face_size = 109
+        face_size = config.settings['emoji']['size']
     if include_emoji:
-        emoji_face = freetype.Face(str((config.fonts_folder / "NotoColorEmoji.ttf").absolute()))
+        emoji_face = freetype.Face(str((config.fonts_folder / config.settings['emoji']['font']).absolute()))
         emoji_face.set_char_size(face_size * 64)
 
     if mono:
