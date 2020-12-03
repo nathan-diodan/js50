@@ -163,7 +163,7 @@ def emoji2numpy(text):
     face_size = config.settings['emoji']['size']
     emoji_face = freetype.Face(str((config.fonts_folder / config.settings['emoji']['font']).absolute()))
     emoji_face.set_char_size(face_size * 64)
-    emoji_face.load_char(text, freetype.FT_LOAD_COLOR)
+    emoji_face.load_char(text[0], freetype.FT_LOAD_COLOR)
     slot = emoji_face.glyph
     w, h = slot.bitmap.width, slot.bitmap.rows
     Z = np.array(slot.bitmap.buffer, dtype=np.uint8).reshape(h, w, 4)
