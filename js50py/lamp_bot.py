@@ -9,7 +9,7 @@ import emoji
 import zmq
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram import ParseMode
-from telegram.ext import BaseFilter
+from telegram.ext import MessageFilter
 from telegram.ext import CommandHandler, MessageHandler, CallbackQueryHandler
 from telegram.ext import Updater, Filters
 
@@ -19,7 +19,7 @@ from animation_helper.animation_functions import prepare_animation, prepare_vide
 zmq_context = zmq.Context()
 
 
-class FilterEmoji(BaseFilter):
+class FilterEmoji(MessageFilter):
     def filter(self, message):
         return message.text in emoji.UNICODE_EMOJI
 
@@ -327,6 +327,7 @@ def sticker(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=f"{str(sticker_cache_file.absolute())}")
 
+
 @restricted
 def photo(update, context):
     reply_massage = context.bot.send_message(chat_id=update.effective_chat.id,
@@ -372,6 +373,7 @@ def catch_all(update, context):
     pass
 
 
+emoji_filter = FilterEmoji()
 handler_list = [
     CommandHandler('start', start),
     CommandHandler(settings_data['secret'], secret),
@@ -383,7 +385,7 @@ handler_list = [
     MessageHandler(Filters.sticker, sticker),
     MessageHandler(Filters.document.gif | Filters.video, video),
     MessageHandler(Filters.photo, photo),
-    MessageHandler(FilterEmoji(), cb_emoji),
+    MessageHandler(emoji_filter, cb_emoji),
     MessageHandler(Filters.text & (~Filters.command), text),
     MessageHandler(Filters.all, catch_all)
 ]
