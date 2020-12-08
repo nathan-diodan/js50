@@ -171,7 +171,7 @@ def start(update, context):
 def secret(update, context):
     if update.effective_user.id in config.settings['blacklist']:
         return None
-    if not config.settings['user']:
+    if not config.settings['admin']:
         if update.effective_user.id not in config.settings['admin']:
             config.settings['admin'].append(update.effective_user.id)
     else:
