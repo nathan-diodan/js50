@@ -253,9 +253,9 @@ def clock(update, context):
 
 @restricted
 def animation(update, context):
-    keyboard = [[InlineKeyboardButton("Rainfall", callback_data='set_mode_hap'),
-                 InlineKeyboardButton("Firework", callback_data='set_mode_telegram')],
-                [InlineKeyboardButton("Soundtrace", callback_data='set_mode_music'),]]
+    keyboard = [[InlineKeyboardButton("Rainfall", callback_data='set_animation_rainfall'),
+                 InlineKeyboardButton("Firework", callback_data='set_animation_firework')],
+                [InlineKeyboardButton("Soundtrace", callback_data='set_animation_music'),]]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -270,9 +270,9 @@ def callback(update, context):
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     need_answer = True
     query.answer()
-    if query.data == 'set_mode_music':
+    if query.data == 'set_animation_music':
         send_music(socket, name='spectral')
-    elif query.data == 'set_mode_music2':
+    elif query.data == 'set_animation_firework':
         send_opengl(socket)
     elif query.data.startswith('set_clock'):
         send_clock(socket, query.data)
