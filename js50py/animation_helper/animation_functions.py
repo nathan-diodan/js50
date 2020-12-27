@@ -203,9 +203,10 @@ def text2numpy(text, mono=False, include_emoji=True, face_size=20, rgb=(1, 1, 1)
                      bitmap.rows + max(0, -(slot.bitmap_top - bitmap.rows)))
         baseline = max(baseline, max(0, -(slot.bitmap_top - bitmap.rows)))
         kerning = face.get_kerning(previous, c)
-        # print(f'{slot.advance.x} {slot.advance.x >> 6} | {kerning.x} {kerning.x >> 6}')
-        # width += (slot.advance.x >> 6) + (kerning.x >> 6)
-        width += (slot.advance.x >> 6) + (kerning.x >> 6)
+        w, h = bitmap.width, bitmap.rows
+        # print(f'{slot.advance.x} {slot.advance.x >> 6} | {kerning.x} {kerning.x >> 6} | {w},{h}')
+        # width += bitmap.width + (kerning.x >> 6)
+        width += max(slot.advance.x >> 6, w) + (kerning.x >> 6)
         previous = c
 
     Z = np.zeros((height, width, 4), dtype=np.uint8)
@@ -230,6 +231,7 @@ def text2numpy(text, mono=False, include_emoji=True, face_size=20, rgb=(1, 1, 1)
         y = max(0, height - baseline - top)
         kerning = face.get_kerning(previous, c)
         x += (kerning.x >> 6)
+        # print(f'{kerning.x << 6} {kerning.x} | {x} | {w}, {h}')
         if c in emoji.UNICODE_EMOJI:
             Z[y:y + h, x:x + w] += np.array(bitmap.buffer, dtype=np.uint8).reshape(h, w, 4)
         else:

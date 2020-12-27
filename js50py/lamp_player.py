@@ -50,9 +50,9 @@ class LPlayer:
             elif meta_data['file_type'] == 'sticker':
                 self.current_animation = load_animation(Path(meta_data['cache']))
         elif meta_data['type'] == 'music':
-            self.current_animation = {'music': True, 'fps':60, 'name': meta_data['name']}
+            self.current_animation = {'music': True, 'fps': 60, 'name': meta_data['name']}
         elif meta_data['type'] == 'opengl':
-            self.current_animation = {'opengl': True, 'fps':120}
+            self.current_animation = {'opengl': True, 'fps': 120}
         elif meta_data['type'] == 'apple':
             self.current_animation = {'apple': True, 'command': meta_data['command']}
         elif meta_data['type'] == 'animation_data':
@@ -253,12 +253,13 @@ class AppleHomeKitPlayer(Thread):
         def hsv_to_rgb(self, h, s, v):
             return [int(rgb * 255) for rgb in colorsys.hsv_to_rgb(h / 360.0, s / 100.0, v / 100.0)]
 
+
 class OpenGLPlayer(Thread):
     def __init__(self, led_matrix, current_animation, device='cap'):
         super().__init__()
-        self.device = device
-        self.samplerate = sd.query_devices(self.device, 'input')['default_samplerate']
-        self.rec_time = 1.0 / current_animation['fps']
+        #self.device = device
+        #self.samplerate = sd.query_devices(self.device, 'input')['default_samplerate']
+        #self.rec_time = 1.0 / current_animation['fps']
         self.fps = current_animation['fps']
         self.current_animation = current_animation
         self.led_matrix = led_matrix
@@ -269,7 +270,7 @@ class OpenGLPlayer(Thread):
         self.draw()
 
     @staticmethod
-    def particle(x=0, y=0, color = None):
+    def particle(x=0, y=0, color=None):
         a = np.random.uniform(0.0, 2 * np.pi)
         radius = np.random.uniform(0.005, 0.08)
         if color is None:
@@ -280,8 +281,8 @@ class OpenGLPlayer(Thread):
                          x + (np.cos(a) * radius), y + (np.sin(a) * radius)]).astype('f4')
 
     @staticmethod
-    def mass_particle(size, x=0,y=0,color=None):
-        out = np.zeros((size,7), dtype='f4')
+    def mass_particle(size, x=0, y=0, color=None):
+        out = np.zeros((size, 7), dtype='f4')
         a = np.random.uniform(0.0, 2 * np.pi, size=size)
         radius = np.random.uniform(0.005, 0.08, size=size)
         if color is None:
@@ -465,6 +466,7 @@ class OpenGLPlayer(Thread):
 
     def stop(self):
         self.stopped = True
+
 
 class MusicPlayer(Thread):
     def __init__(self, led_matrix, current_animation, device='cap', color_map='inferno', gain=50, width=64, height=64):
