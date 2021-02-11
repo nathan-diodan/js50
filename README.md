@@ -78,3 +78,10 @@ Prepare for the first lunch:
 python /home/pi/lamp_data/js50/js50py/setup.py
 ```
 It will ask for the some information like your telegram bot token to create the `settings.json`.
+
+Add weather icons
+```
+git clone --depth 1 --filter=blob:none --no-checkout https://github.com/erikflowers/weather-icons
+cd weather-icons
+git checkout master -- svg
+```

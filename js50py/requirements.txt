@@ -13,3 +13,5 @@ pytz
 scikit-video
 Pillow
 moderngl
+cairosvg
+pyowm

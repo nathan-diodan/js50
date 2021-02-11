@@ -1,8 +1,8 @@
 import os
 import shutil
 import subprocess
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import time
 import emoji
 import freetype
 import numpy as np
@@ -112,6 +112,28 @@ def load_qr(data, rgb=(255, 255, 255), size=64):
     return {'mover': True, 'frame': full, 'fps': 5}
 
 
+def get_stop_watch(diff, rgb=(1, 1, 1), display_shape=(64, 64)):
+    font_size = 26
+    buffer_frame = np.zeros((display_shape[0], display_shape[1], 3), dtype=np.uint8)
+    hour = text2numpy(f'{int(diff / (60 * 60)):02d}', mono=True, include_emoji=False, face_size=font_size, rgb=rgb)
+    minute = text2numpy(f'{int((diff / 60) % 60):02d}', mono=True, include_emoji=False, face_size=font_size, rgb=rgb)
+    second = text2numpy(f'{int(diff % 60):02d}', mono=True, include_emoji=False, face_size=font_size, rgb=rgb)
+    millisecond = text2numpy(f'{int(diff % 1 * 100):02d}', mono=True, include_emoji=False, face_size=font_size, rgb=rgb)
+    height, width = hour.shape[:2]
+
+    display_data = [[hour, minute], [second, millisecond]]
+    x_starts = [(display_shape[0] - height*2)//3, display_shape[0] - (display_shape[0] - height*2)//3-height]
+    for x in [0, 1]:
+        for y in [0, 1]:
+            x_start = x_starts[x]
+            y_start = y * (display_shape[1] - width + 3)
+            bs = np.index_exp[x_start:x_start + height, y_start:y_start + width - 3]
+            buffer_frame[bs][display_data[x][y][:, :-3] != 0] = display_data[x][y][:, :-3][
+                display_data[x][y][:, :-3] != 0]
+
+    return buffer_frame
+
+
 def get_time_quad(earth=None, earth_frame=0, rgb=(1, 1, 1), display_shape=(64, 64)):
     now = datetime.now(tz)
     day = text2numpy(f'{now.day:02d}', mono=True, include_emoji=False, face_size=18, rgb=rgb)
@@ -136,6 +158,42 @@ def get_time_quad(earth=None, earth_frame=0, rgb=(1, 1, 1), display_shape=(64, 6
             bs = np.index_exp[x_start:x_start+height, y_start:y_start+width-3]
             buffer_frame[bs][display_data[x][y][:, :-3] != 0] = display_data[x][y][:, :-3][display_data[x][y][:, :-3] != 0]
 
+    return buffer_frame
+
+
+def get_weather_clock(icon, temp, rgb=(1, 1, 1), display_shape=(64, 64)):
+    now = datetime.now(tz)
+    temp = temp.split('.')
+    temp_full = text2numpy(temp[0], mono=True, include_emoji=False, face_size=18, rgb=(1, 1, 1))
+    temp_rest = text2numpy(temp[1], mono=True, include_emoji=False, face_size=18, rgb=(1, 1, 1))
+    hour = text2numpy(f'{now.hour:02d}', mono=True, include_emoji=False, face_size=18, rgb=(1, 1, 1))
+    minute = text2numpy(f'{now.minute:02d}', mono=True, include_emoji=False, face_size=18, rgb=(1, 1, 1))
+
+    buffer_frame = np.zeros((display_shape[0], display_shape[1], 3), dtype=np.uint8)
+    icon = np.stack([icon * c for c in rgb], axis=-1)
+
+    x_start = (display_shape[0] - icon.shape[0])//2 - 4
+    y_start = (display_shape[1] - icon.shape[1])//2
+    bs = np.index_exp[x_start:x_start+icon.shape[0], y_start:y_start+icon.shape[1]]
+    buffer_frame[bs] = icon
+
+    display_data = [hour, minute]
+    for y in [0, 1]:
+        height, width = display_data[y].shape[:2]
+        y_start = y * (display_shape[1] - width)
+        bs = np.index_exp[:height, y_start:y_start+width]
+        buffer_frame[bs] = display_data[y]
+    display_data = [temp_rest, temp_full]
+    for y in [0, 1]:
+        height, width = display_data[y].shape[:2]
+        y_start = (display_shape[1])//2 - (y * width) - (y*4) + 2
+        bs = np.index_exp[display_shape[0]-height:, y_start:y_start+width]
+        buffer_frame[bs] = display_data[y]
+    # height, width = temp.shape[:2]
+    # y_start = (display_shape[1] - temp.shape[1]) // 2
+    # bs = np.index_exp[display_shape[0] - height:display_shape[0], y_start:y_start + width - 3]
+    # buffer_frame[bs] = temp[:, :-3]
+    buffer_frame[-2:, display_shape[1]//2-2: display_shape[1]//2, :] = 255
     return buffer_frame
 
 

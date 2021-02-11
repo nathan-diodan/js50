@@ -138,11 +138,14 @@ def send_opengl(socket, flags=0):
     print("Received reply %s" % message)
 
 
-def send_clock(socket, clock_type, flags=0):
+def send_clock(socket, clock_type, task=None, flags=0):
     mode = clock_type.partition('set_clock_')[2]
+    if mode == 'stop':
+        mode = 'stop_watch'
     meta_data = dict(
         type='clock',
-        mode=mode
+        mode=mode,
+        task=task,
     )
     print(f'Sending clock')
     socket.send_json(meta_data, flags)
@@ -252,6 +255,29 @@ def clock(update, context):
 
 
 @restricted
+def mod_stop_watch(update, context, query):
+    task = query.data.partition('stop_watch_')[2]
+    if not task:
+        task = None
+    send_clock(socket, 'set_clock_stop_watch', task)
+    if task == 'done':
+        query.edit_message_text(text="⏱ stopped")
+
+
+
+@restricted
+def stopwatch_key(update, context, query):
+    keyboard = [[InlineKeyboardButton("Start", callback_data='set_stop_watch_start'),
+                 InlineKeyboardButton("Stop", callback_data='set_stop_watch_stop')],
+                [InlineKeyboardButton("Reset", callback_data='set_stop_watch_reset'),
+                 InlineKeyboardButton("Done", callback_data='set_stop_watch_done')]
+                ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    query.edit_message_text('Please choose:', reply_markup=reply_markup)
+
+
+@restricted
 def animation(update, context):
     keyboard = [[InlineKeyboardButton("Rainfall", callback_data='set_animation_rainfall'),
                  InlineKeyboardButton("Firework", callback_data='set_animation_firework')],
@@ -274,6 +300,12 @@ def callback(update, context):
         send_music(socket, name='spectral')
     elif query.data == 'set_animation_firework':
         send_opengl(socket)
+    elif 'stop_watch' in query.data:
+        mod_stop_watch(update, context, query)
+        need_answer = False
+    elif query.data.startswith('set_clock_stop'):
+        stopwatch_key(update, context, query)
+        need_answer = False
     elif query.data.startswith('set_clock'):
         send_clock(socket, query.data)
     elif query.data.startswith('set_admin'):

@@ -5,7 +5,7 @@ from multiprocessing import Process, Queue
 from pathlib import Path
 from queue import Empty as qu_Empty
 from threading import Thread
-
+import random
 import moderngl
 import numpy as np
 import sounddevice as sd
@@ -15,8 +15,10 @@ from pyhap import const
 from pyhap.accessory import Accessory
 from pyhap.accessory_driver import AccessoryDriver
 
-from animation_helper.animation_functions import load_video, load_animation, load_text, load_qr, get_time_quad
+from animation_helper.animation_functions import load_video, load_animation, load_text, load_qr
+from animation_helper.animation_functions import get_time_quad, get_stop_watch, get_weather_clock
 from animation_helper.render_earth import render_earth, render_single_frame
+from animation_helper.weather import get_weather_data
 from post_master import LEDPost
 import config
 
@@ -66,7 +68,7 @@ class LPlayer:
         elif meta_data['type'] == 'qr':
             self.current_animation = load_qr(meta_data['data'])
         elif meta_data['type'] == 'clock':
-            self.current_animation = {'clock': True}
+            self.current_animation = {'clock': True, 'mode': meta_data['mode'], 'task': meta_data['task']}
         elif meta_data['type'] == 'settings':
             self.mode = meta_data['mode']
         self.control_socket.send_string('received')
@@ -75,23 +77,35 @@ class LPlayer:
     def run(self):
         while True:
             self.recv_work()
-            if self.current_player:
-                self.current_player.stop()
-                self.current_player.join()
+            new_player = None
             if self.current_animation.get('music'):
-                self.current_player = MusicPlayer(self.LEDmatrix, self.current_animation)
+                new_player = MusicPlayer(self.LEDmatrix, self.current_animation)
             elif self.current_animation.get('opengl'):
-                self.current_player = OpenGLPlayer(self.LEDmatrix, self.current_animation)
+                new_player = OpenGLPlayer(self.LEDmatrix, self.current_animation)
             elif self.current_animation.get('apple'):
-                self.current_player = AppleHomeKitPlayer(self.LEDmatrix, self.current_animation)
+                new_player = AppleHomeKitPlayer(self.LEDmatrix, self.current_animation)
             elif self.current_animation.get('clock'):
-                self.current_player = ClockPlayer(self.LEDmatrix, self.current_animation)
+                if self.current_player.pid == 'clock_player':
+                    if self.current_player.mode == self.current_animation['mode']:
+                        self.current_player.task = self.current_animation['task']
+                    else:
+                        new_player = ClockPlayer(self.LEDmatrix, self.current_animation)
+                else:
+                    new_player = ClockPlayer(self.LEDmatrix, self.current_animation)
             else:
-                self.current_player = Player(self.LEDmatrix, self.current_animation)
-            self.current_player.start()
+                new_player = Player(self.LEDmatrix, self.current_animation)
+
+            if new_player is not None:
+                if self.current_player:
+                    self.current_player.stop()
+                    self.current_player.join()
+                self.current_player = new_player
+                self.current_player.start()
 
 
 class Player(Thread):
+    pid = 'base_player'
+
     def __init__(self, led_matrix, current_animation):
         self.current_animation = current_animation
         self.led_matrix = led_matrix
@@ -126,38 +140,86 @@ class Player(Thread):
 
 
 class ClockPlayer(Thread):
+    pid = 'clock_player'
+
     def __init__(self, led_matrix, current_animation):
         super().__init__()
+        self.mode = current_animation['mode']
+        self.task = current_animation['task']
         self.stopped = False
         self.led_matrix = led_matrix
-        self.rotation_per_minute = 5
-        self.led_matrix.fps = 30
-        self.current_animation = current_animation
-        self.earth_queue = Queue(1)
-        self.resolution_rotation = 360
-        self.rot_frames = self.led_matrix.fps * 60 / self.rotation_per_minute
-        self.earth_process = Process(target=render_earth, args=(self.earth_queue,), kwargs={'num': self.resolution_rotation})
-        self.earth_process.start()
-        self.earth = render_single_frame(0, 52)[None, ...]
+        if self.mode == 'world':
+            self.led_matrix.fps = 30
+            self.rotation_per_minute = 5
+            self.earth_queue = Queue(1)
+            self.resolution_rotation = 360
+            self.rot_frames = self.led_matrix.fps * 60 / self.rotation_per_minute
+            self.earth_process = Process(target=render_earth, args=(self.earth_queue, ), kwargs={'num': self.resolution_rotation})
+            self.earth_process.start()
+            self.earth = render_single_frame(0, 52)[None, ...]
+        elif self.mode == 'stop':
+            self.led_matrix.fps = 120
+            pass
 
-    def run(self):
+    def world(self):
         n = 0
         while not self.stopped:
-            n = (n+1) % self.rot_frames
-            frame = int(n/self.rot_frames * len(self.earth))
+            n = (n + 1) % self.rot_frames
+            frame = int(n / self.rot_frames * len(self.earth))
             try:
                 self.earth = self.earth_queue.get(False)
             except qu_Empty:
                 pass
             self.led_matrix.send(get_time_quad(self.earth, earth_frame=frame))
-        pass
+
+    def weather(self):
+        weather_icon, temp = get_weather_data(size=52)
+        start = time.time()
+        while not self.stopped:
+            if (time.time() - start) > 600:
+                weather_icon, temp = get_weather_data(size=52)
+                start = time.time()
+            hue = ((time.time()*10) % 600) / 600
+            rgb_tuple = colorsys.hsv_to_rgb(hue, 1, 0.6)
+            self.led_matrix.send(get_weather_clock(weather_icon, temp, rgb=rgb_tuple))
+
+    def stop_watch(self):
+        running = False
+        diff = 0
+        start = None
+        while not self.stopped:
+            hue = ((time.time()*10) % 600) / 600
+            rgb_tuple = colorsys.hsv_to_rgb(hue, 1, 0.6)
+            if self.task == 'start':
+                if diff == 0:
+                    start = time.time()
+                else:
+                    start = time.time() - diff
+                running = True
+            elif self.task == 'reset':
+                start = time.time()
+                diff = 0
+            elif self.task in ['stop', 'done']:
+                running = False
+            if self.task:
+                self.task = None
+            if running:
+                diff = time.time() - start
+            self.led_matrix.send(get_stop_watch(diff, rgb=rgb_tuple))
+
+    def run(self):
+        if hasattr(self, self.mode):
+            getattr(self, self.mode)()
 
     def stop(self):
         self.stopped = True
-        self.earth_process.kill()
+        if self.mode == 'world':
+            self.earth_process.kill()
 
 
 class AppleHomeKitPlayer(Thread):
+    pid = 'clock_player'
+
     def __init__(self, led_matrix, current_animation):
         super().__init__()
         self.driver = AccessoryDriver(port=51826)
@@ -225,11 +287,11 @@ class AppleHomeKitPlayer(Thread):
             # Lets only write the new RGB values if the power is on
             # otherwise update the hue value only
             if self.accessory_state == 1:
-                print(self.hue, self.saturation, self.brightness)
+                #print(self.hue, self.saturation, self.brightness)
                 self.hue = value
                 rgb_tuple = self.hsv_to_rgb(
                     self.hue, self.saturation, self.brightness)
-                print(rgb_tuple)
+                #print(rgb_tuple)
                 if len(rgb_tuple) == 3:
                     self.update_matrix(rgb_tuple)
             else:
@@ -255,6 +317,8 @@ class AppleHomeKitPlayer(Thread):
 
 
 class OpenGLPlayer(Thread):
+    pid = 'ogl_player'
+
     def __init__(self, led_matrix, current_animation, device='cap'):
         super().__init__()
         #self.device = device
@@ -469,6 +533,8 @@ class OpenGLPlayer(Thread):
 
 
 class MusicPlayer(Thread):
+    pid = 'music_player'
+
     def __init__(self, led_matrix, current_animation, device='cap', color_map='inferno', gain=50, width=64, height=64):
         self.current_animation = current_animation
         self.led_matrix = led_matrix

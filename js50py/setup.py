@@ -1,8 +1,10 @@
 import config
 from animation_helper.sticker_pack_cache import StickerCollector
+from animation_helper.render_earth import render_single_frame
 import subprocess
 import json
 import urllib.request
+import numpy as np
 import zipfile
 
 print('JS50 lamp setup')
@@ -66,11 +68,19 @@ if not (config.tgs_tool_folder / 'node_modules').is_dir():
     subprocess.run(['npm', 'install'], cwd=config.tgs_tool_folder)
 
 print('fill cache')
+print('earth base')
+if not (config.cache_folder / 'world_base.npz').is_file():
+    earth_animation = np.zeros((360, 52, 52, 3), dtype=np.uint8)
+    for n, w in enumerate(np.linspace(0, 360, 360, endpoint=False)):
+        earth_animation[n] = render_single_frame(w, 52, light=False)
+    np.savez(config.cache_folder / 'world_base.npz', wb_360_52=earth_animation)
+
+print('Collect default sticker')
 pyrogram_config = config.base_dir / 'js50py' / 'animation_helper' / 'pyrogram.ini'
 if not pyrogram_config.is_file():
     print('pyrogram settings:')
-    api_id = input('api_id')
-    api_hash = input('api_hash')
+    api_id = input('api_id:')
+    api_hash = input('api_hash:')
     pyrogram_config.write_text(f"[pyrogram]\napi_id = {api_id}\napi_hash = {api_hash}")
 
 sc = StickerCollector(config_file=pyrogram_config)

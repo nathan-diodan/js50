@@ -8,6 +8,7 @@ import cartopy.crs as ccrs
 from cartopy.feature.nightshade import Nightshade
 from cartopy.feature import NaturalEarthFeature
 import numpy as np
+import config
 
 plt.style.use('dark_background')
 
@@ -20,15 +21,21 @@ LAND = NaturalEarthFeature(
     'physical', 'land', '110m',
     edgecolor='face', facecolor=(0.7, 1.0, 0.7), zorder=-1)
 
-def render_nightshade(w, size):
+if (config.cache_folder / 'world_base.npz').is_file():
+    wb = np.load(config.cache_folder / 'world_base.npz')['wb_360_52']
+else:
+    wb = None
+
+
+def render_nightshade(w, size, now=None, alpha=0.6):
+    if now is None:
+        now = datetime.utcnow()
     fig = plt.figure(figsize=(1, 1), dpi=size)
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.Orthographic(w, 0))
 
-    # ax.add_feature(LAND)
-    # ax.add_feature(OCEAN)
     for spine in ax.spines.values():
         spine.set_color('black')
-    ax.add_feature(Nightshade(datetime.utcnow(), alpha=0.6))
+    ax.add_feature(Nightshade(now, alpha=alpha))
     ax.set_facecolor('white')
     for ax in fig.get_axes():
         ax.set_xticks([])
@@ -51,7 +58,14 @@ def render_nightshade(w, size):
 
     # plt.savefig('_test.png')
 
-def render_single_frame(w, size, now=None):
+
+def buffer_night_shade(w, size, now, alpha=0.7):
+    shade = render_nightshade(w, size, now, alpha=alpha)
+    shade = shade[:, :, 0] / np.max(shade[:, :, 0])
+    return (wb[int(round(w))] * shade[:, :, np.newaxis]).astype(np.uint8)
+
+
+def render_single_frame(w, size, now=None, light=True):
     if now is None:
         now = datetime.utcnow()
     fig = plt.figure(figsize=(1, 1), dpi=size)
@@ -61,8 +75,8 @@ def render_single_frame(w, size, now=None):
     ax.add_feature(OCEAN)
     for spine in ax.spines.values():
         spine.set_color('black')
-
-    ax.add_feature(Nightshade(now, alpha=0.6))
+    if light:
+        ax.add_feature(Nightshade(now, alpha=0.6))
 
     for ax in fig.get_axes():
         ax.set_xticks([])
@@ -94,11 +108,16 @@ def render_earth(earth_queue, size=52, num=600):
         print('Loop')
         if earth_queue.empty():
             print('render')
-            start=time.time()
-            now=datetime.utcnow()
-            for n, w in enumerate(np.linspace(0, 360, num_loop, endpoint=False)):
-                earth_animation[n] = render_single_frame(w, size, now)
-                # earth_animation[n] = render_nightshade(w, size)
+            start = time.time()
+            now = datetime.utcnow()
+            if wb is not None and size == 52:
+                for n, w in enumerate(np.linspace(0, 360, num_loop, endpoint=False)):
+                    print(n,w)
+                    earth_animation[n] = buffer_night_shade(w, size, now)
+            else:
+                for n, w in enumerate(np.linspace(0, 360, num_loop, endpoint=False)):
+                    print(n,w)
+                    earth_animation[n] = render_single_frame(w, size, now)
             earth_queue.put(earth_animation)
             print(f'{num_loop} images: {time.time() - start:.2f} s')
             if first:
